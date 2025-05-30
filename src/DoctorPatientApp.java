@@ -1,4 +1,3 @@
-
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
@@ -11,7 +10,7 @@ public class DoctorPatientApp extends JFrame {
     private JTextArea outputArea;
     private DefaultListModel<String> suggestionsModel;
     private JList<String> suggestionsList;
-    private JButton deleteButton, editButton;
+    private JButton deleteButton, editButton, addPatientInsideButton;
     private File dataFile = new File("patients.txt");
 
     // To keep track of selected patient
@@ -70,12 +69,15 @@ public class DoctorPatientApp extends JFrame {
         JScrollPane outputScrollPane = new JScrollPane(outputArea);
         outputScrollPane.setPreferredSize(new Dimension(270, 300));
 
+        addPatientInsideButton = new JButton("Add Record");
+        addPatientInsideButton.setEnabled(false);
         editButton = new JButton("Edit Patient");
         editButton.setEnabled(false);
         deleteButton = new JButton("Delete Patient");
         deleteButton.setEnabled(false);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.add(addPatientInsideButton);
         buttonPanel.add(editButton);
         buttonPanel.add(deleteButton);
 
@@ -95,6 +97,7 @@ public class DoctorPatientApp extends JFrame {
                 String selection = suggestionsList.getSelectedValue();
                 if (selection != null) {
                     displayPatientInfo(selection);
+                    addPatientInsideButton.setEnabled(true);
                     editButton.setEnabled(true);
                     deleteButton.setEnabled(true);
                 } else {
@@ -102,6 +105,8 @@ public class DoctorPatientApp extends JFrame {
                 }
             }
         });
+
+        addPatientInsideButton.addActionListener(e -> addPatientInside());
 
         editButton.addActionListener(e -> editSelectedPatient());
 
@@ -169,6 +174,37 @@ public class DoctorPatientApp extends JFrame {
         JOptionPane.showMessageDialog(this, "Patient added.");
 
         updateSuggestions();
+    }
+
+    private void addPatientInside() {
+        String name = selectedName;
+        String phone = selectedPhone;
+
+        if (name.isEmpty() || phone.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "AN ERROR OCCURRED! CONTACT THE DEVELOPER");
+            return;
+        }
+
+        String reason = JOptionPane.showInputDialog(this, "Reason for Visit:");
+        String amount = JOptionPane.showInputDialog(this, "Amount Paid:");
+        String date = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
+
+        String record = name.toUpperCase() + "|" + phone + "|" + date + "|" + reason + "|" + amount;
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(dataFile, true))) {
+            writer.write(record + "\n");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+
+        nameField.setText("");
+        phoneField.setText("");
+
+        JOptionPane.showMessageDialog(this, "Record Added");
+
+        updateSuggestions();
+
+        JOptionPane.showMessageDialog(this, "Patient record updated!");
     }
 
     private void updateSuggestions() {
@@ -344,6 +380,7 @@ public class DoctorPatientApp extends JFrame {
         selectedName = null;
         selectedPhone = null;
         outputArea.setText("");
+        addPatientInsideButton.setEnabled(false);
         editButton.setEnabled(false);
         deleteButton.setEnabled(false);
         suggestionsList.clearSelection();
